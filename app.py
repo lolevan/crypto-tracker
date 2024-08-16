@@ -1,4 +1,5 @@
 import os
+import requests
 from aiogram import Bot, Dispatcher, types
 from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.utils import executor
@@ -16,6 +17,22 @@ class LoggingMiddleware(BaseMiddleware):
 
 
 dp.middleware.setup(LoggingMiddleware())
+
+
+def get_crypto_price(crypto, currency="USD"):
+    url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
+    parameters = {
+        'symbol': crypto,
+        'convert': currency
+    }
+    headers = {
+        'Accepts': 'application/json',
+        'X-CMC_PRO_API_KEY': CMC_API_KEY,
+    }
+    response = requests.get(url, headers=headers, params=parameters)
+    data = response.json()
+    price = data['data'][crypto]['quote'][currency]['price']
+    return price
 
 
 @dp.message_handler(commands=['start'])
