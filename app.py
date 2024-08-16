@@ -1,5 +1,6 @@
 import os
 import requests
+import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.utils import executor
@@ -53,5 +54,18 @@ async def set_currency(message: types.Message):
     await message.reply(f"Отслеживание {currency} с минимальным порогом {min_threshold} и максимальным порогом {max_threshold} установлено.")
 
 
+async def track_prices():
+    while True:
+        for currency, (min_threshold, max_threshold, chat_id) in tracked_currencies.items():
+            price = get_crypto_price(currency)
+            if price <= min_threshold:
+                await bot.send_message(chat_id, f"{currency} упала ниже минимального порога: {price} USD")
+            elif price >= max_threshold:
+                await bot.send_message(chat_id, f"{currency} превысила максимальный порог: {price} USD")
+        await asyncio.sleep(60)
+
+
 if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.create_task(track_prices())
     executor.start_polling(dp, skip_updates=True)
